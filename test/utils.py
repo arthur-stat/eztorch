@@ -6,8 +6,8 @@ This plotting code is adapted from 唐亘's work. Many thanks!
 I first came across 唐亘’s videos towards the end of 2024, just after I had been admitted as a master’s student.
 Now it is already 2026—how swiftly time passes.
 """
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 def configure_plot_style() -> None:
