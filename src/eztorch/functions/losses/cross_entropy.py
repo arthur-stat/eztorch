@@ -4,6 +4,7 @@ from eztorch.typing import FloatArray, IntArray
 
 
 class CrossEntropyLoss:
+
     def __init__(self, epsilon: float = 1e-12) -> None:
         self.epsilon = epsilon
 

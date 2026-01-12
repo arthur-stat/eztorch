@@ -4,6 +4,7 @@ from eztorch.typing import FloatArray
 
 
 class MSELoss:
+
     def __call__(self, preds: FloatArray, targets: FloatArray) -> tuple[float, FloatArray]:
         diff: FloatArray = preds - targets
         batch_size: int = preds.shape[0]

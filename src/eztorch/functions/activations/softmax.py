@@ -4,6 +4,7 @@ from eztorch.typing import FloatArray
 
 
 class Softmax:
+
     def __call__(self, x: FloatArray) -> FloatArray:
         x_max: FloatArray = np.max(x, axis=-1, keepdims=True)
         exps: FloatArray = np.exp(x - x_max)

@@ -5,8 +5,8 @@ from eztorch.optim.base import Optimizer
 from eztorch.typing import FloatArray, IntArray
 
 
-class MLP:
-    """Simple MLP wrapper that returns logits; losses handle activation externally."""
+class SequentialModel:
+    """Basic sequential model, which can be MLP, CNN etc."""
 
     def __init__(self, seq: Sequential) -> None:
         self.model = seq

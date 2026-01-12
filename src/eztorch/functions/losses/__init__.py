@@ -4,6 +4,7 @@ from eztorch.typing import FloatArray, IntArray
 
 
 class LossFunction(Protocol):
+
     def __call__(self, preds: FloatArray, targets: FloatArray | IntArray) -> tuple[float, FloatArray]:
         ...
 

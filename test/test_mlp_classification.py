@@ -13,7 +13,7 @@ for path in (SRC_DIR, TEST_DIR):
 import matplotlib.pyplot as plt
 from sklearn.datasets import make_moons
 
-from eztorch.models.mlp import MLP
+from eztorch.models.sequential_model import SequentialModel
 from eztorch.optim.adam import Adam
 from eztorch.utils.trainer import Trainer
 from eztorch.layers.linear import Linear
@@ -31,7 +31,7 @@ def main():
     log_every = 100
     learning_rate = 0.05
 
-    mlp = MLP(Sequential([
+    mlp = SequentialModel(Sequential([
         Linear(2, 8), BatchNorm1d(8), ReLU(),
         Linear(8, 8), LayerNorm(8), ReLU(),
         Linear(8, 2)

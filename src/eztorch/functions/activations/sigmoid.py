@@ -4,6 +4,7 @@ from eztorch.typing import FloatArray
 
 
 class Sigmoid:
+
     def __call__(self, x: FloatArray) -> FloatArray:
         self.output: FloatArray = 1 / (1 + np.exp(-x))
         return self.output
