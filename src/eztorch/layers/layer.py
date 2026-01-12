@@ -1,4 +1,4 @@
-from typing import Protocol, List
+from typing import Protocol
 
 from eztorch.typing import FloatArray
 
@@ -10,6 +10,10 @@ class LayerProtocol(Protocol):
     def backward(self, grad_output: FloatArray, learning_rate: float) -> FloatArray:
         ...
 
-    def parameters(self) -> List[FloatArray]:
+    def parameters(self) -> list[FloatArray]:
         """Return trainable parameters if present; empty list otherwise."""
+        ...
+
+    def grads(self) -> list[FloatArray]:
+        """Return gradients aligned with parameters; empty list if no params."""
         ...

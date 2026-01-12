@@ -11,3 +11,9 @@ class Sigmoid:
     def backward(self, grad_output: FloatArray, learning_rate: float) -> FloatArray:
         grad_input: FloatArray = grad_output * self.output * (1 - self.output)
         return grad_input
+
+    def parameters(self) -> list[FloatArray]:
+        return []
+
+    def grads(self) -> list[FloatArray]:
+        return []
