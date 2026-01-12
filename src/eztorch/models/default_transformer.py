@@ -52,6 +52,7 @@ class DefaultTransformer:
         x = self.pos_encoding(x)
         for layer in self.encoder_layers:
             x = layer(x, src_mask)
+        self._memory = x
         return x
 
     def decode(self, tgt: FloatArray, memory: FloatArray, tgt_mask: FloatArray | None = None,
@@ -66,8 +67,11 @@ class DefaultTransformer:
 
     def __call__(self, src: FloatArray, tgt: FloatArray, src_mask: FloatArray | None = None,
                  tgt_mask: FloatArray | None = None, memory_mask: FloatArray | None = None) -> FloatArray:
+        self._src = src
+        self._tgt = tgt
         memory = self.encode(src, src_mask)
         logits = self.decode(tgt, memory, tgt_mask, memory_mask)
+        self._logits = logits
         return logits
 
     def step(self, src: FloatArray, tgt_input: FloatArray, tgt_labels: IntArray, src_mask: FloatArray | None = None,
@@ -110,19 +114,17 @@ class DefaultTransformer:
         grad_norm = self.generator.backward(grad_gen_in)
         grad_dec_out = self.norm_out.backward(grad_norm)
 
-        # decode backward
-        grad_memory = np.zeros_like(src)
+        # decode backward (no memory grad propagated)
         for layer in reversed(self.decoder_layers):
             grad_dec_out = layer.backward(grad_dec_out)
-            # Note: cross-attn does not propagate grad to memory in current implementation.
         grad_tgt_embed = grad_dec_out
-        grad_tgt = self.tgt_embed.backward(grad_tgt_embed)
+        _ = self.tgt_embed.backward(grad_tgt_embed)
         # positional encoding is additive; gradient flows through unchanged
 
-        # encoder backward
-        grad_enc = np.zeros_like(src)
+        # encoder backward (no feedback from decoder in current cross-attn)
+        grad_enc = np.zeros_like(self._memory)
         for layer in reversed(self.encoder_layers):
             grad_enc = layer.backward(grad_enc)
-        grad_src = self.src_embed.backward(grad_enc)
+        _ = self.src_embed.backward(grad_enc)
         # positional encoding additive; gradient passes through
         return
