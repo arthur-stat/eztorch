@@ -33,12 +33,20 @@ class MultiHeadSelfAttention:
         x = np.transpose(x, (0, 2, 1, 3)).reshape(batch_size, seq_len, heads * d_k)
         return x
 
-    def __call__(self, x: FloatArray, mask: FloatArray | None = None) -> FloatArray:
-        self.input: FloatArray = x  # (batch, seq, d_model)
+    def __call__(self, query: FloatArray, key: FloatArray | None = None, value: FloatArray | None = None, mask: FloatArray | None = None) -> FloatArray:
+        if key is None:
+            key = query
+        if value is None:
+            value = key
 
-        Q = np.einsum("bsd,dk->bsk", x, self.W_q)
-        K = np.einsum("bsd,dk->bsk", x, self.W_k)
-        V = np.einsum("bsd,dk->bsk", x, self.W_v)
+        self.input_q: FloatArray = query
+        self.input_k: FloatArray = key
+        self.input_v: FloatArray = value
+        self._inputs_shared = (self.input_q is self.input_k) and (self.input_q is self.input_v)
+
+        Q = np.einsum("bsd,dk->bsk", query, self.W_q)
+        K = np.einsum("bsd,dk->bsk", key, self.W_k)
+        V = np.einsum("bsd,dk->bsk", value, self.W_v)
 
         Q_h = self._split_heads(Q)
         K_h = self._split_heads(K)
@@ -104,16 +112,17 @@ class MultiHeadSelfAttention:
         grad_K = self._combine_heads(grad_K_h)
         grad_V = self._combine_heads(grad_V_h)
 
-        self.grad_W_q[...] = np.einsum("bsi,bsj->ij", self.input, grad_Q)
-        self.grad_W_k[...] = np.einsum("bsi,bsj->ij", self.input, grad_K)
-        self.grad_W_v[...] = np.einsum("bsi,bsj->ij", self.input, grad_V)
+        self.grad_W_q[...] = np.einsum("bsi,bsj->ij", self.input_q, grad_Q)
+        self.grad_W_k[...] = np.einsum("bsi,bsj->ij", self.input_k, grad_K)
+        self.grad_W_v[...] = np.einsum("bsi,bsj->ij", self.input_v, grad_V)
 
-        grad_input = np.zeros_like(self.input)
-        grad_input += np.einsum("bsi,ij->bsj", grad_Q, self.W_q.T)
-        grad_input += np.einsum("bsi,ij->bsj", grad_K, self.W_k.T)
-        grad_input += np.einsum("bsi,ij->bsj", grad_V, self.W_v.T)
+        grad_input_q = np.einsum("bsi,ij->bsj", grad_Q, self.W_q.T)
+        grad_input_k = np.einsum("bsi,ij->bsj", grad_K, self.W_k.T)
+        grad_input_v = np.einsum("bsi,ij->bsj", grad_V, self.W_v.T)
 
-        return grad_input
+        if self._inputs_shared:
+            return grad_input_q + grad_input_k + grad_input_v
+        return grad_input_q
 
     def parameters(self) -> list[FloatArray]:
         return [self.W_q, self.W_k, self.W_v, self.W_o]

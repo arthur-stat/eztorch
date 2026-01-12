@@ -60,8 +60,8 @@ class LayerNorm:
         return self.gamma * self.x_hat + self.beta
 
     def backward(self, grad_output: FloatArray) -> FloatArray:
-        self.grad_gamma = np.sum(grad_output * self.x_hat, axis=0)
-        self.grad_beta = np.sum(grad_output, axis=0)
+        self.grad_gamma = np.sum(grad_output * self.x_hat, axis=(0, 1))
+        self.grad_beta = np.sum(grad_output, axis=(0, 1))
 
         grad_x_hat = grad_output * self.gamma
         mean_grad = np.mean(grad_x_hat, axis=1, keepdims=True)

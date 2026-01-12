@@ -27,9 +27,13 @@ class Linear:
         return params
 
     def backward(self, grad_output: FloatArray) -> FloatArray:
+        # flatten leading dims
+        grad_output_flat = grad_output.reshape(-1, grad_output.shape[-1])
+        input_flat = self.input.reshape(-1, self.input.shape[-1])
+
         grad_input: FloatArray = grad_output @ self.weights.T
-        self.grad_weights = self.input.T @ grad_output
-        self.grad_bias = np.sum(grad_output, axis=0) if self.bias is not None else None
+        self.grad_weights = input_flat.T @ grad_output_flat
+        self.grad_bias = np.sum(grad_output_flat, axis=0) if self.bias is not None else None
         return grad_input
 
     def grads(self) -> list[FloatArray]:
