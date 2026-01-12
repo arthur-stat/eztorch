@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from contextlib import contextmanager
 from typing import Protocol, Iterator
 
@@ -21,6 +19,5 @@ def zero_grads_inplace(grads: list[FloatArray]) -> None:
 
 @contextmanager
 def zeroed(grads: list[FloatArray]) -> Iterator[None]:
-    """Zero grads on enter. Useful if backward accumulates gradients."""
     zero_grads_inplace(grads)
     yield

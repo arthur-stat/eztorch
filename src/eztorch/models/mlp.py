@@ -1,12 +1,9 @@
 import numpy as np
-from eztorch.typing import FloatArray, IntArray
 
-from eztorch.layers.linear import Linear
+from eztorch.functions.activations import Softmax
 from eztorch.layers.sequential import Sequential
-from eztorch.functions.sigmoid import Sigmoid
-from eztorch.functions.softmax import Softmax
-from eztorch.optim.sgd import SGD
 from eztorch.optim.base import Optimizer
+from eztorch.typing import FloatArray, IntArray
 
 
 class MLP:

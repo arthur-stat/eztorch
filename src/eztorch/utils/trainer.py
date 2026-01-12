@@ -1,12 +1,11 @@
-from __future__ import annotations
-
 from typing import Callable
 
 import numpy as np
 
-from eztorch.typing import FloatArray, IntArray
+from eztorch.functions.losses import LossFunction, CrossEntropyLoss
 from eztorch.layers.sequential import Sequential
 from eztorch.optim.base import Optimizer, zeroed
+from eztorch.typing import FloatArray, IntArray
 
 
 class Trainer:
@@ -16,25 +15,18 @@ class Trainer:
         model: Sequential,
         forward: Callable[[FloatArray], FloatArray],
         optimizer: Optimizer,
+        loss_fn: LossFunction | None = None,
         epsilon: float = 1e-12,
     ) -> None:
         self.model = model
         self.forward = forward
         self.optimizer = optimizer
+        self.loss_fn = loss_fn or CrossEntropyLoss(epsilon=epsilon)
         self.epsilon = epsilon
 
-    def step(self, X_batch: FloatArray, y_batch: IntArray) -> float:
-        logits: FloatArray = self.forward(X_batch)
-        logits_max = np.max(logits, axis=-1, keepdims=True)
-        e_x = np.exp(logits - logits_max)
-        probs: FloatArray = e_x / e_x.sum(axis=-1, keepdims=True)
-
-        batch_size: int = X_batch.shape[0]
-        loss = float(-np.mean(np.log(probs[np.arange(batch_size), y_batch] + self.epsilon)))
-
-        grad_output: FloatArray = probs.copy()
-        grad_output[np.arange(batch_size), y_batch] -= 1
-        grad_output /= batch_size
+    def step(self, X_batch: FloatArray, y_batch: FloatArray | IntArray) -> float:
+        preds: FloatArray = self.forward(X_batch)
+        loss, grad_output = self.loss_fn(preds, y_batch)
 
         with zeroed(self.model.grads()):
             for layer in reversed(self.model.layers):
@@ -43,7 +35,7 @@ class Trainer:
 
         return loss
 
-    def fit(self, X: FloatArray, y: IntArray, batch_size: int, max_steps: int, log_every: int = 10000) -> list[float]:
+    def fit(self, X: FloatArray, y: FloatArray | IntArray, batch_size: int, max_steps: int, log_every: int) -> list[float]:
         losses: list[float] = []
         for step in range(max_steps):
             indices = np.arange(X.shape[0])

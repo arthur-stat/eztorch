@@ -1,8 +1,6 @@
-from typing import List
-
 import numpy as np
-from eztorch.typing import FloatArray
 
+from eztorch.typing import FloatArray
 from .layer import LayerProtocol
 
 
