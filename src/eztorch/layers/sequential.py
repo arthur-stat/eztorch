@@ -2,6 +2,7 @@ import numpy as np
 
 
 class Sequential:
+    
     def __init__(self, layers):
         self.layers = layers
 
@@ -13,9 +14,9 @@ class Sequential:
 
     def predict_proba(self, x):
         logits = self(x)
-        e_x = np.exp(logits - np.max(logits))
-        return e_x / e_x.sum(axis=0, keepdims=True)
+        logits_max = np.max(logits, axis=-1, keepdims=True)
+        e_x = np.exp(logits - logits_max)
+        return e_x / e_x.sum(axis=-1, keepdims=True)
 
-    def paramenters(self):
-        return [p for layer in self.layers for p in layer.paramenters()]
-
+    def parameters(self):
+        return [p for layer in self.layers for p in getattr(layer, "parameters", lambda: [])()]

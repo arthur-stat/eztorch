@@ -2,9 +2,10 @@ import numpy as np
 
 
 class Linear:
-    def __init__(self, inputFeatures, outputFeatures, bias=True):
-        self.weights = np.random.rand(inputFeatures, outputFeatures)
-        self.bias = np.random.rand(outputFeatures) if bias else None
+    
+    def __init__(self, input_features, output_features, bias=True):
+        self.weights = np.random.randn(input_features, output_features) / np.sqrt(max(1, input_features))
+        self.bias = np.zeros(output_features, dtype=float) if bias else None
 
     def __call__(self, x):
         self.input = x
@@ -13,10 +14,11 @@ class Linear:
             self.output += self.bias
         return self.output
 
-    def paramenters(self):
+    def parameters(self):
+        params = [self.weights]
         if self.bias is not None:
-            return [self.output, self.bias]
-        return [self.output]
+            params.append(self.bias)
+        return params
 
     def backward(self, grad_output, learning_rate):
         grad_input = grad_output @ self.weights.T
@@ -28,4 +30,3 @@ class Linear:
             self.bias -= learning_rate * grad_bias
 
         return grad_input
-
