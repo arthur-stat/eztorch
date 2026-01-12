@@ -11,12 +11,8 @@ from eztorch.optim.base import Optimizer
 
 class MLP:
     
-    def __init__(self) -> None:
-        self.model = Sequential([
-            Linear(2, 4), Sigmoid(),
-            Linear(4, 4), Sigmoid(),
-            Linear(4, 2)
-        ])
+    def __init__(self, seq: Sequential) -> None:
+        self.model = seq
         self.softmax = Softmax()
 
     def __call__(self, x: FloatArray) -> FloatArray:
@@ -26,9 +22,7 @@ class MLP:
         return self.model(x)
 
     def backwardAndGradientDescent(self, x: FloatArray, y: IntArray, learning_rate: float) -> None:
-        # Backward to compute gradients only
         self.backward(x, y)
-        # Apply SGD updates for backward compatibility
         optimizer = SGD(learning_rate)
         optimizer.step(self.model.parameters(), self.model.grads())
 
