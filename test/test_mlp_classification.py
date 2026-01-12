@@ -10,7 +10,6 @@ for path in (SRC_DIR, TEST_DIR):
     if path not in sys.path:
         sys.path.append(path)
 
-import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.datasets import make_moons
 
@@ -18,7 +17,8 @@ from eztorch.models.mlp import MLP
 from eztorch.optim.adam import Adam
 from eztorch.utils.trainer import Trainer
 from eztorch.layers.linear import Linear
-from eztorch.functions.activations import Sigmoid
+from eztorch.layers.norm import BatchNorm1d, LayerNorm
+from eztorch.functions.activations import ReLU
 from utils import configure_plot_style, plot_loss_curve, scatter_classes, plot_decision_boundary
 
 
@@ -32,9 +32,9 @@ def main():
     learning_rate = 0.05
 
     mlp = MLP(Sequential([
-        Linear(2, 4), Sigmoid(),
-        Linear(4, 4), Sigmoid(),
-        Linear(4, 2)
+        Linear(2, 8), BatchNorm1d(8), ReLU(),
+        Linear(8, 8), LayerNorm(8), ReLU(),
+        Linear(8, 2)
     ]))
     optimizer = Adam(lr=learning_rate)
     trainer = Trainer(model=mlp.model, forward=mlp.forward, optimizer=optimizer)

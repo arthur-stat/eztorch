@@ -14,7 +14,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from eztorch.layers.linear import Linear
-from eztorch.functions.activations import Sigmoid
+from eztorch.layers.norm import LayerNorm
+from eztorch.functions.activations import ReLU
 from eztorch.optim.adam import Adam
 from eztorch.utils.trainer import Trainer
 from eztorch.functions.losses import MSELoss
@@ -36,7 +37,7 @@ def main():
     learning_rate = 0.05
 
     model = Sequential([
-        Linear(1, 16), Sigmoid(),
+        Linear(1, 16), LayerNorm(16), ReLU(),
         Linear(16, 1)
     ])
     optimizer = Adam(lr=learning_rate)
