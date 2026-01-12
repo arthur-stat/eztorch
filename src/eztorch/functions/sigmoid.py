@@ -8,7 +8,7 @@ class Sigmoid:
         self.output: FloatArray = 1 / (1 + np.exp(-x))
         return self.output
 
-    def backward(self, grad_output: FloatArray, learning_rate: float) -> FloatArray:
+    def backward(self, grad_output: FloatArray) -> FloatArray:
         grad_input: FloatArray = grad_output * self.output * (1 - self.output)
         return grad_input
 

@@ -10,6 +10,7 @@ from eztorch.optim.base import Optimizer, zeroed
 
 
 class Trainer:
+
     def __init__(
         self,
         model: Sequential,
@@ -37,7 +38,7 @@ class Trainer:
 
         with zeroed(self.model.grads()):
             for layer in reversed(self.model.layers):
-                grad_output = layer.backward(grad_output, 0.0)
+                grad_output = layer.backward(grad_output)
             self.optimizer.step(self.model.parameters(), self.model.grads())
 
         return loss

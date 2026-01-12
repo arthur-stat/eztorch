@@ -10,7 +10,7 @@ class Softmax:
         self.output: FloatArray = exps / np.sum(exps, axis=-1, keepdims=True)
         return self.output
 
-    def backward(self, grad_output: FloatArray, learning_rate: float) -> FloatArray:
+    def backward(self, grad_output: FloatArray) -> FloatArray:
         s: FloatArray = (grad_output * self.output).sum(axis=-1, keepdims=True)
         grad_input: FloatArray = (grad_output - s) * self.output
         return grad_input

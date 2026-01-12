@@ -9,7 +9,6 @@ class Linear:
     def __init__(self, input_features: int, output_features: int, bias: bool = True):
         self.weights: FloatArray = np.random.randn(input_features, output_features) / np.sqrt(max(1, input_features))
         self.bias: Optional[FloatArray] = np.zeros(output_features, dtype=float) if bias else None
-        # Gradients placeholders
         self.grad_weights: FloatArray = np.zeros_like(self.weights)
         self.grad_bias: Optional[FloatArray] = np.zeros_like(self.bias) if self.bias is not None else None
 
@@ -26,11 +25,10 @@ class Linear:
             params.append(self.bias)
         return params
 
-    def backward(self, grad_output: FloatArray, learning_rate: float) -> FloatArray:
+    def backward(self, grad_output: FloatArray) -> FloatArray:
         grad_input: FloatArray = grad_output @ self.weights.T
         self.grad_weights = self.input.T @ grad_output
         self.grad_bias = np.sum(grad_output, axis=0) if self.bias is not None else None
-        # No parameter update here; optimizer applies updates.
         return grad_input
 
     def grads(self) -> list[FloatArray]:

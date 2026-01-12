@@ -1,6 +1,8 @@
 import os
 import sys
 
+from eztorch.layers.sequential import Sequential
+
 ROOT = os.path.dirname(os.path.dirname(__file__))
 SRC_DIR = os.path.join(ROOT, "src")
 if SRC_DIR not in sys.path:
@@ -12,27 +14,29 @@ from sklearn.datasets import make_moons
 
 from eztorch.models.mlp import MLP
 from eztorch.optim.adam import Adam
-from eztorch.engine.trainer import Trainer
+from eztorch.utils.trainer import Trainer
+from eztorch.layers.linear import Linear
+from eztorch.functions.sigmoid import Sigmoid
 
 
 def main():
 
     X, y = make_moons(n_samples=1000, noise=0.1)
     batch_size = 50
-    max_steps = 50000
+    max_steps = 1000
     learning_rate = 0.05
 
-    mlp = MLP([
+    mlp = MLP(Sequential([
         Linear(2, 4), Sigmoid(),
         Linear(4, 4), Sigmoid(),
         Linear(4, 2)
-    ])
+    ]))
     optimizer = Adam(lr=learning_rate)
     trainer = Trainer(model=mlp.model, forward=mlp.forward, optimizer=optimizer)
 
-    lossRecord = trainer.fit(X, y, batch_size=batch_size, max_steps=max_steps, log_every=1000)
+    loss_record = trainer.fit(X, y, batch_size=batch_size, max_steps=max_steps, log_every=100)
 
-    steps = np.arange(0, max_steps, 1000)
+    steps = np.arange(0, max_steps, 100)
     plt.rcParams.update({
         'font.family': 'serif',
         'font.serif': ['Times New Roman'],
@@ -48,7 +52,7 @@ def main():
         'grid.linestyle': '--',
         'grid.color': 'gray'
     })
-    plt.plot(steps, lossRecord, color='#9b95c9', label='Training Loss')
+    plt.plot(steps, loss_record, color='#9b95c9', label='Training Loss')
     plt.title('Training Loss Curve', fontsize=16)
     plt.xlabel('Steps', fontsize=12)
     plt.ylabel('Loss', fontsize=12)
@@ -59,7 +63,6 @@ def main():
     # plt.savefig("training_loss_curve.svg", format="svg")
     plt.show()
 
-    # Visualization helpers (reused)
     def draw_data(data):
         fig = plt.figure(figsize=(8, 6))
         ax = fig.add_subplot(1, 1, 1)

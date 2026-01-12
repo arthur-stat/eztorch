@@ -4,10 +4,11 @@ from eztorch.typing import FloatArray
 
 
 class LayerProtocol(Protocol):
+
     def __call__(self, x: FloatArray) -> FloatArray:
         ...
 
-    def backward(self, grad_output: FloatArray, learning_rate: float) -> FloatArray:
+    def backward(self, grad_output: FloatArray) -> FloatArray:
         ...
 
     def parameters(self) -> list[FloatArray]:

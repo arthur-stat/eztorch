@@ -8,7 +8,9 @@ authors = [
 ]
 requires-python = ">=3.9"
 dependencies = [
+    "matplotlib>=3.9.4",
     "numpy>=2.0",
+    "scikit-learn>=1.6.1",
     "tokenizers>=0.22.2",
 ]
 

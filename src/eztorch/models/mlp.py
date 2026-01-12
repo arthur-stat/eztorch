@@ -21,11 +21,6 @@ class MLP:
     def forward(self, x: FloatArray) -> FloatArray:
         return self.model(x)
 
-    def backwardAndGradientDescent(self, x: FloatArray, y: IntArray, learning_rate: float) -> None:
-        self.backward(x, y)
-        optimizer = SGD(learning_rate)
-        optimizer.step(self.model.parameters(), self.model.grads())
-
     def probability(self, x: FloatArray) -> FloatArray:
         logits: FloatArray = self.forward(x)
         return self.softmax(logits)
@@ -43,7 +38,7 @@ class MLP:
         grad_output /= batch_size
 
         for layer in reversed(self.model.layers):
-            grad_output = getattr(layer, "backward")(grad_output, 0.0)
+            grad_output = getattr(layer, "backward")(grad_output)
 
     def train_step(self, x: FloatArray, y: IntArray, optimizer: Optimizer) -> None:
         self.backward(x, y)
