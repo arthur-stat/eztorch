@@ -1,16 +1,15 @@
 import numpy as np
 
-from eztorch.functions.activations import Softmax
 from eztorch.layers.sequential import Sequential
 from eztorch.optim.base import Optimizer
 from eztorch.typing import FloatArray, IntArray
 
 
 class MLP:
-    
+    """Simple MLP wrapper that returns logits; losses handle activation externally."""
+
     def __init__(self, seq: Sequential) -> None:
         self.model = seq
-        self.softmax = Softmax()
 
     def __call__(self, x: FloatArray) -> FloatArray:
         return self.model(x)
@@ -18,19 +17,18 @@ class MLP:
     def forward(self, x: FloatArray) -> FloatArray:
         return self.model(x)
 
-    def probability(self, x: FloatArray) -> FloatArray:
-        logits: FloatArray = self.forward(x)
-        return self.softmax(logits)
-
     def classify(self, x: FloatArray) -> IntArray:
-        return np.argmax(self.probability(x), axis=1)
+        logits: FloatArray = self.forward(x)
+        return np.argmax(logits, axis=1)
 
     def backward(self, x: FloatArray, y: IntArray) -> None:
         batch_size: int = x.shape[0]
         logits: FloatArray = self.forward(x)
-        probs: FloatArray = self.softmax(logits)
+        logits_max = np.max(logits, axis=-1, keepdims=True)
+        exp_scores = np.exp(logits - logits_max)
+        probs: FloatArray = exp_scores / np.sum(exp_scores, axis=-1, keepdims=True)
 
-        grad_output: FloatArray = probs.copy()
+        grad_output: FloatArray = probs
         grad_output[np.arange(batch_size), y] -= 1
         grad_output /= batch_size
 
