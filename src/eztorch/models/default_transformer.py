@@ -4,6 +4,7 @@ from eztorch.functions.losses import CrossEntropyLoss
 from eztorch.layers.embedding import Embedding
 from eztorch.layers.linear import Linear
 from eztorch.layers.norm import LayerNorm
+from eztorch.layers.dropout import Dropout
 from eztorch.structures.transformer.decoder import TransformerDecoderLayer
 from eztorch.structures.transformer.encoder import TransformerEncoderLayer
 from eztorch.typing import FloatArray, IntArray
@@ -31,16 +32,19 @@ class DefaultTransformer:
             self,
             src_vocab: int,
             tgt_vocab: int,
-            d_model: int = 128,
-            num_heads: int = 4,
-            d_ff: int = 256,
-            num_layers: int = 2,
+            d_model: int = 512,
+            num_heads: int = 8,
+            d_ff: int = 2048,
+            num_layers: int = 6,
             max_len: int = 512,
     ) -> None:
         # Use embeddings for token ids directly
+        self.d_model = d_model
         self.src_embed = Embedding(src_vocab, d_model)
         self.tgt_embed = Embedding(tgt_vocab, d_model)
         self.pos_encoding = PositionalEncoding(d_model, max_len)
+        self.dropout_src = Dropout(p=0.1)
+        self.dropout_tgt = Dropout(p=0.1)
         self.encoder_layers = [TransformerEncoderLayer(d_model, num_heads, d_ff) for _ in range(num_layers)]
         self.decoder_layers = [TransformerDecoderLayer(d_model, num_heads, d_ff) for _ in range(num_layers)]
         self.norm_out = LayerNorm(d_model)
@@ -48,8 +52,9 @@ class DefaultTransformer:
         self.loss_fn = CrossEntropyLoss()
 
     def encode(self, src: IntArray, src_mask: FloatArray | None = None) -> FloatArray:
-        x = self.src_embed(src)
+        x = self.src_embed(src) * np.sqrt(self.d_model)
         x = self.pos_encoding(x)
+        x = self.dropout_src(x)
         for layer in self.encoder_layers:
             x = layer(x, src_mask)
         self._memory = x
@@ -57,8 +62,9 @@ class DefaultTransformer:
 
     def decode(self, tgt: IntArray, memory: FloatArray, tgt_mask: FloatArray | None = None,
                memory_mask: FloatArray | None = None) -> FloatArray:
-        x = self.tgt_embed(tgt)
+        x = self.tgt_embed(tgt) * np.sqrt(self.d_model)
         x = self.pos_encoding(x)
+        x = self.dropout_tgt(x)
         for layer in self.decoder_layers:
             x = layer(x, memory, tgt_mask, memory_mask)
         x = self.norm_out(x)
@@ -121,12 +127,14 @@ class DefaultTransformer:
             grad_mem = getattr(layer.cross_attn, "grad_memory", None)
             if grad_mem is not None:
                 grad_memory_total += grad_mem
-        _ = self.tgt_embed.backward(grad_dec_out)
+        grad_dec_in = self.dropout_tgt.backward(grad_dec_out)
+        _ = self.tgt_embed.backward(grad_dec_in)
         # positional encoding is additive; gradient flows through unchanged
 
         grad_enc = grad_memory_total
         for layer in reversed(self.encoder_layers):
             grad_enc = layer.backward(grad_enc)
-        _ = self.src_embed.backward(grad_enc)
+        grad_enc_in = self.dropout_src.backward(grad_enc)
+        _ = self.src_embed.backward(grad_enc_in)
         # positional encoding additive; gradient passes through
         return

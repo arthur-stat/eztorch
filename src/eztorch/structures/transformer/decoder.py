@@ -4,6 +4,7 @@ from eztorch.functions.activations import ReLU
 from eztorch.layers.attention import MultiHeadSelfAttention
 from eztorch.layers.linear import Linear
 from eztorch.layers.norm import LayerNorm
+from eztorch.layers.dropout import Dropout
 from eztorch.typing import FloatArray
 
 
@@ -13,8 +14,11 @@ class TransformerDecoderLayer:
     def __init__(self, d_model: int, num_heads: int, d_ff: int) -> None:
         self.self_attn = MultiHeadSelfAttention(d_model, num_heads)
         self.cross_attn = MultiHeadCrossAttention(d_model, num_heads)
+        self.dropout1 = Dropout(p=0.1)
         self.norm1 = LayerNorm(d_model)
+        self.dropout2 = Dropout(p=0.1)
         self.norm2 = LayerNorm(d_model)
+        self.dropout3 = Dropout(p=0.1)
         self.norm3 = LayerNorm(d_model)
         self.ffn = self._as_sequential([
             Linear(d_model, d_ff),
@@ -27,16 +31,19 @@ class TransformerDecoderLayer:
         self._memory: FloatArray = encoder_out
 
         self_attn_out: FloatArray = self.self_attn(x, mask=tgt_mask)
+        self_attn_out = self.dropout1(self_attn_out)
         pre_norm1 = self_attn_out + x
         norm1_out: FloatArray = self.norm1(pre_norm1)
         self._norm1_out = norm1_out
 
         cross_out: FloatArray = self.cross_attn(norm1_out, encoder_out, memory_mask)
+        cross_out = self.dropout2(cross_out)
         pre_norm2 = cross_out + norm1_out
         norm2_out: FloatArray = self.norm2(pre_norm2)
         self._norm2_out = norm2_out
 
         ffn_out: FloatArray = self.ffn(norm2_out)
+        ffn_out = self.dropout3(ffn_out)
         pre_norm3 = ffn_out + norm2_out
         out: FloatArray = self.norm3(pre_norm3)
         return out
@@ -44,21 +51,21 @@ class TransformerDecoderLayer:
     def backward(self, grad_output: FloatArray) -> FloatArray:
         grad_pre_norm3 = self.norm3.backward(grad_output)
 
-        grad_ffn_out = grad_pre_norm3
+        grad_ffn_out = self.dropout3.backward(grad_pre_norm3)
         grad_norm2_skip = grad_pre_norm3
 
         grad_ffn_in = self.ffn.backward(grad_ffn_out)
         grad_norm2_total = grad_ffn_in + grad_norm2_skip
 
         grad_pre_norm2 = self.norm2.backward(grad_norm2_total)
-        grad_cross_out = grad_pre_norm2
+        grad_cross_out = self.dropout2.backward(grad_pre_norm2)
         grad_norm1_skip = grad_pre_norm2
 
         grad_cross_query = self.cross_attn.backward(grad_cross_out)
         grad_norm1_total = grad_cross_query + grad_norm1_skip
 
         grad_pre_norm1 = self.norm1.backward(grad_norm1_total)
-        grad_self_out = grad_pre_norm1
+        grad_self_out = self.dropout1.backward(grad_pre_norm1)
         grad_input_skip = grad_pre_norm1
 
         grad_input = self.self_attn.backward(grad_self_out)

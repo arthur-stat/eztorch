@@ -16,6 +16,9 @@ import matplotlib.pyplot as plt
 from eztorch.layers.linear import Linear
 from eztorch.layers.norm import LayerNorm
 from eztorch.functions.activations import ReLU
+from eztorch.layers.dropout import Dropout
+from eztorch.layers.pool import GlobalAvgPool1d
+from eztorch.layers.reshape import UnsqueezeSeq
 from eztorch.optim.adam import Adam
 from eztorch.utils.trainer import Trainer
 from eztorch.functions.losses import MSELoss
@@ -37,7 +40,8 @@ def main():
     learning_rate = 0.05
 
     model = Sequential([
-        Linear(1, 16), LayerNorm(16), ReLU(),
+        UnsqueezeSeq(), GlobalAvgPool1d(),  # no-op pool for play
+        Linear(1, 16), LayerNorm(16), ReLU(), Dropout(p=0.1),
         Linear(16, 1)
     ])
     optimizer = Adam(lr=learning_rate)

@@ -2,6 +2,7 @@ from eztorch.functions.activations import ReLU
 from eztorch.layers.attention import MultiHeadSelfAttention
 from eztorch.layers.linear import Linear
 from eztorch.layers.norm import LayerNorm
+from eztorch.layers.dropout import Dropout
 from eztorch.typing import FloatArray
 
 
@@ -10,23 +11,27 @@ class TransformerEncoderLayer:
 
     def __init__(self, d_model: int, num_heads: int, d_ff: int) -> None:
         self.self_attn = MultiHeadSelfAttention(d_model, num_heads)
+        self.dropout1 = Dropout(p=0.1)
         self.norm1 = LayerNorm(d_model)
         self.ffn = self._as_sequential([
             Linear(d_model, d_ff),
             ReLU(),
             Linear(d_ff, d_model),
         ])
+        self.dropout2 = Dropout(p=0.1)
         self.norm2 = LayerNorm(d_model)
 
     def __call__(self, x: FloatArray, mask: FloatArray | None = None) -> FloatArray:
         self._input: FloatArray = x
         attn_out: FloatArray = self.self_attn(x, mask=mask)
+        attn_out = self.dropout1(attn_out)
         self._attn_out: FloatArray = attn_out
         pre_norm1 = attn_out + x
         norm1_out: FloatArray = self.norm1(pre_norm1)
         self._norm1_out = norm1_out
 
         ffn_out: FloatArray = self.ffn(norm1_out)
+        ffn_out = self.dropout2(ffn_out)
         self._ffn_out = ffn_out
         pre_norm2 = ffn_out + norm1_out
         out: FloatArray = self.norm2(pre_norm2)
@@ -35,14 +40,14 @@ class TransformerEncoderLayer:
     def backward(self, grad_output: FloatArray) -> FloatArray:
         grad_pre_norm2 = self.norm2.backward(grad_output)
 
-        grad_ffn_out = grad_pre_norm2
+        grad_ffn_out = self.dropout2.backward(grad_pre_norm2)
         grad_skip_norm1 = grad_pre_norm2
 
         grad_ffn_in = self.ffn.backward(grad_ffn_out)
         grad_norm1_total = grad_ffn_in + grad_skip_norm1
 
         grad_pre_norm1 = self.norm1.backward(grad_norm1_total)
-        grad_attn_out = grad_pre_norm1
+        grad_attn_out = self.dropout1.backward(grad_pre_norm1)
         grad_input_skip = grad_pre_norm1
 
         grad_input = self.self_attn.backward(grad_attn_out)

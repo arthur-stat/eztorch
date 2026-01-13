@@ -19,6 +19,9 @@ from eztorch.utils.trainer import Trainer
 from eztorch.layers.linear import Linear
 from eztorch.layers.norm import BatchNorm1d, LayerNorm
 from eztorch.functions.activations import ReLU
+from eztorch.layers.dropout import Dropout
+from eztorch.layers.pool import GlobalAvgPool1d
+from eztorch.layers.reshape import UnsqueezeSeq
 from utils import configure_plot_style, plot_loss_curve, scatter_classes, plot_decision_boundary
 
 
@@ -32,8 +35,9 @@ def main():
     learning_rate = 0.05
 
     mlp = SequentialModel(Sequential([
-        Linear(2, 8), BatchNorm1d(8), ReLU(),
-        Linear(8, 8), LayerNorm(8), ReLU(),
+        UnsqueezeSeq(), GlobalAvgPool1d(),  # no-op pool for play
+        Linear(2, 8), BatchNorm1d(8), ReLU(), Dropout(p=0.1),
+        Linear(8, 8), LayerNorm(8), ReLU(), Dropout(p=0.1),
         Linear(8, 2)
     ]))
     optimizer = Adam(lr=learning_rate)
