@@ -1,13 +1,12 @@
 import numpy as np
-from eztorch.typing import FloatArray, IntArray
 
+from eztorch.functions.losses import CrossEntropyLoss
+from eztorch.layers.embedding import Embedding
 from eztorch.layers.linear import Linear
 from eztorch.layers.norm import LayerNorm
-from eztorch.functions.activations import ReLU
-from eztorch.functions.losses import CrossEntropyLoss
-from eztorch.structures.transformer.encoder import TransformerEncoderLayer
 from eztorch.structures.transformer.decoder import TransformerDecoderLayer
-from eztorch.layers.sequential import Sequential
+from eztorch.structures.transformer.encoder import TransformerEncoderLayer
+from eztorch.typing import FloatArray, IntArray
 
 
 class PositionalEncoding:
@@ -38,8 +37,9 @@ class DefaultTransformer:
             num_layers: int = 2,
             max_len: int = 512,
     ) -> None:
-        self.src_embed = Linear(src_vocab, d_model)
-        self.tgt_embed = Linear(tgt_vocab, d_model)
+        # Use embeddings for token ids directly
+        self.src_embed = Embedding(src_vocab, d_model)
+        self.tgt_embed = Embedding(tgt_vocab, d_model)
         self.pos_encoding = PositionalEncoding(d_model, max_len)
         self.encoder_layers = [TransformerEncoderLayer(d_model, num_heads, d_ff) for _ in range(num_layers)]
         self.decoder_layers = [TransformerDecoderLayer(d_model, num_heads, d_ff) for _ in range(num_layers)]
@@ -47,7 +47,7 @@ class DefaultTransformer:
         self.generator = Linear(d_model, tgt_vocab)
         self.loss_fn = CrossEntropyLoss()
 
-    def encode(self, src: FloatArray, src_mask: FloatArray | None = None) -> FloatArray:
+    def encode(self, src: IntArray, src_mask: FloatArray | None = None) -> FloatArray:
         x = self.src_embed(src)
         x = self.pos_encoding(x)
         for layer in self.encoder_layers:
@@ -55,7 +55,7 @@ class DefaultTransformer:
         self._memory = x
         return x
 
-    def decode(self, tgt: FloatArray, memory: FloatArray, tgt_mask: FloatArray | None = None,
+    def decode(self, tgt: IntArray, memory: FloatArray, tgt_mask: FloatArray | None = None,
                memory_mask: FloatArray | None = None) -> FloatArray:
         x = self.tgt_embed(tgt)
         x = self.pos_encoding(x)
@@ -65,7 +65,7 @@ class DefaultTransformer:
         logits = self.generator(x)
         return logits
 
-    def __call__(self, src: FloatArray, tgt: FloatArray, src_mask: FloatArray | None = None,
+    def __call__(self, src: IntArray, tgt: IntArray, src_mask: FloatArray | None = None,
                  tgt_mask: FloatArray | None = None, memory_mask: FloatArray | None = None) -> FloatArray:
         self._src = src
         self._tgt = tgt
@@ -74,7 +74,7 @@ class DefaultTransformer:
         self._logits = logits
         return logits
 
-    def step(self, src: FloatArray, tgt_input: FloatArray, tgt_labels: IntArray, src_mask: FloatArray | None = None,
+    def step(self, src: IntArray, tgt_input: IntArray, tgt_labels: IntArray, src_mask: FloatArray | None = None,
              tgt_mask: FloatArray | None = None, memory_mask: FloatArray | None = None) -> tuple[float, FloatArray]:
         logits = self(src, tgt_input, src_mask, tgt_mask, memory_mask)
         # flatten batch*seq for CE
@@ -107,7 +107,7 @@ class DefaultTransformer:
         grads.extend(self.generator.grads())
         return grads
 
-    def backward(self, grad_output: FloatArray, src: FloatArray, tgt: FloatArray, src_mask: FloatArray | None = None,
+    def backward(self, grad_output: FloatArray, src: IntArray, tgt: IntArray, src_mask: FloatArray | None = None,
                  tgt_mask: FloatArray | None = None, memory_mask: FloatArray | None = None) -> None:
         # backprop through generator and norm_out
         grad_gen_in: FloatArray = grad_output
@@ -121,8 +121,7 @@ class DefaultTransformer:
             grad_mem = getattr(layer.cross_attn, "grad_memory", None)
             if grad_mem is not None:
                 grad_memory_total += grad_mem
-        grad_tgt_embed = grad_dec_out
-        _ = self.tgt_embed.backward(grad_tgt_embed)
+        _ = self.tgt_embed.backward(grad_dec_out)
         # positional encoding is additive; gradient flows through unchanged
 
         grad_enc = grad_memory_total

@@ -1,11 +1,10 @@
 import numpy as np
-from eztorch.typing import FloatArray
 
+from eztorch.functions.activations import ReLU
 from eztorch.layers.attention import MultiHeadSelfAttention
-from eztorch.functions.attention import scaled_dot_product_attention
 from eztorch.layers.linear import Linear
 from eztorch.layers.norm import LayerNorm
-from eztorch.functions.activations import ReLU
+from eztorch.typing import FloatArray
 
 
 class TransformerDecoderLayer:

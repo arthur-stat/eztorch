@@ -9,8 +9,7 @@ for path in (SRC_DIR,):
 
 import numpy as np
 
-from external.hf_tokenizer import HFTokenizer
-from external.sklearn_one_hot_vectorizer import SklearnOneHotVectorizer
+from external.simple_tokenizer import SimpleTokenizer
 from eztorch.models.default_transformer import DefaultTransformer
 from eztorch.optim.sgd import SGD
 from eztorch.optim.base import zero_grads_inplace
@@ -46,8 +45,8 @@ def main():
         "yoisaki kanade",
     ]
 
-    src_tok = HFTokenizer()
-    tgt_tok = HFTokenizer()
+    src_tok = SimpleTokenizer()
+    tgt_tok = SimpleTokenizer()
     src_tok.build_vocab(train_src_texts + test_src_texts)
     tgt_tok.build_vocab(train_tgt_texts)
 
@@ -60,11 +59,8 @@ def main():
 
     src_vocab = len(src_tok.vocab)
     tgt_vocab = len(tgt_tok.vocab)
-    src_vec = SklearnOneHotVectorizer(src_vocab)
-    tgt_vec = SklearnOneHotVectorizer(tgt_vocab)
-
-    src_batch = src_vec.batch(src_padded)
-    tgt_in_batch = tgt_vec.batch(tgt_in_ids)
+    src_batch = np.array(src_padded, dtype=np.int64)
+    tgt_in_batch = np.array(tgt_in_ids, dtype=np.int64)
     tgt_labels = np.array(tgt_labels_ids, dtype=np.int64)
 
     model = DefaultTransformer(
@@ -95,9 +91,9 @@ def main():
     for new_src in test_src_texts:
         new_ids = src_tok.encode(new_src)
         new_padded = pad_sequences([new_ids], src_tok.PAD)
-        new_src_batch = src_vec.batch(new_padded)
+        new_src_batch = np.array(new_padded, dtype=np.int64)
         bos_pad = [[tgt_tok.BOS] + [tgt_tok.PAD] * (tgt_in_batch.shape[1] - 1)]
-        new_tgt_in = tgt_vec.batch(bos_pad)
+        new_tgt_in = np.array(bos_pad, dtype=np.int64)
         new_logits = model(new_src_batch, new_tgt_in)
         new_pred = new_logits.argmax(axis=-1)[0]
         decoded_new = tgt_tok.decode(new_pred.tolist())

@@ -1,6 +1,7 @@
 import numpy as np
-from eztorch.typing import FloatArray
+
 from eztorch.functions.attention import scaled_dot_product_attention
+from eztorch.typing import FloatArray
 
 
 class MultiHeadSelfAttention:
