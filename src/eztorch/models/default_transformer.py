@@ -114,15 +114,18 @@ class DefaultTransformer:
         grad_norm = self.generator.backward(grad_gen_in)
         grad_dec_out = self.norm_out.backward(grad_norm)
 
-        # decode backward (no memory grad propagated)
+        # decode backward
+        grad_memory_total = np.zeros_like(self._memory)
         for layer in reversed(self.decoder_layers):
             grad_dec_out = layer.backward(grad_dec_out)
+            grad_mem = getattr(layer.cross_attn, "grad_memory", None)
+            if grad_mem is not None:
+                grad_memory_total += grad_mem
         grad_tgt_embed = grad_dec_out
         _ = self.tgt_embed.backward(grad_tgt_embed)
         # positional encoding is additive; gradient flows through unchanged
 
-        # encoder backward (no feedback from decoder in current cross-attn)
-        grad_enc = np.zeros_like(self._memory)
+        grad_enc = grad_memory_total
         for layer in reversed(self.encoder_layers):
             grad_enc = layer.backward(grad_enc)
         _ = self.src_embed.backward(grad_enc)

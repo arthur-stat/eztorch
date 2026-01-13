@@ -43,13 +43,14 @@ class Trainer:
             X_shuff = X[indices]
             y_shuff = y[indices]
 
-            last_loss = 0.0
+            batch_losses: list[float] = []
             for i in range(0, X_shuff.shape[0], batch_size):
                 X_batch = X_shuff[i:i+batch_size]
                 y_batch = y_shuff[i:i+batch_size]
-                last_loss = self.step(X_batch, y_batch)
+                batch_losses.append(self.step(X_batch, y_batch))
 
+            epoch_loss = float(np.mean(batch_losses)) if batch_losses else 0.0
             if log_every and step % log_every == 0:
-                losses.append(last_loss)
-                print(f"Step {step}, Loss: {last_loss:.6f}")
+                losses.append(epoch_loss)
+                print(f"Step {step}, Loss: {epoch_loss:.6f}")
         return losses

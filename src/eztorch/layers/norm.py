@@ -53,19 +53,20 @@ class LayerNorm:
 
     def __call__(self, x: FloatArray) -> FloatArray:
         self.input: FloatArray = x
-        self.mean: FloatArray = np.mean(x, axis=1, keepdims=True)
-        self.var: FloatArray = np.var(x, axis=1, keepdims=True)
+        self.mean: FloatArray = np.mean(x, axis=-1, keepdims=True)
+        self.var: FloatArray = np.var(x, axis=-1, keepdims=True)
         self.std_inv: FloatArray = 1.0 / np.sqrt(self.var + self.eps)
         self.x_hat: FloatArray = (x - self.mean) * self.std_inv
         return self.gamma * self.x_hat + self.beta
 
     def backward(self, grad_output: FloatArray) -> FloatArray:
-        self.grad_gamma = np.sum(grad_output * self.x_hat, axis=(0, 1))
-        self.grad_beta = np.sum(grad_output, axis=(0, 1))
+        axes_except_last = tuple(range(grad_output.ndim - 1))
+        self.grad_gamma = np.sum(grad_output * self.x_hat, axis=axes_except_last)
+        self.grad_beta = np.sum(grad_output, axis=axes_except_last)
 
         grad_x_hat = grad_output * self.gamma
-        mean_grad = np.mean(grad_x_hat, axis=1, keepdims=True)
-        mean_grad_xhat = np.mean(grad_x_hat * self.x_hat, axis=1, keepdims=True)
+        mean_grad = np.mean(grad_x_hat, axis=-1, keepdims=True)
+        mean_grad_xhat = np.mean(grad_x_hat * self.x_hat, axis=-1, keepdims=True)
 
         grad_input = (grad_x_hat - mean_grad - self.x_hat * mean_grad_xhat) * self.std_inv
         return grad_input

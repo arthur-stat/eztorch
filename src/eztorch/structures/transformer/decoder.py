@@ -27,7 +27,7 @@ class TransformerDecoderLayer:
         self._input: FloatArray = x
         self._memory: FloatArray = encoder_out
 
-        self_attn_out: FloatArray = self.self_attn(x, tgt_mask)
+        self_attn_out: FloatArray = self.self_attn(x, mask=tgt_mask)
         pre_norm1 = self_attn_out + x
         norm1_out: FloatArray = self.norm1(pre_norm1)
         self._norm1_out = norm1_out
@@ -97,9 +97,47 @@ class MultiHeadCrossAttention(MultiHeadSelfAttention):
         return super().__call__(query, memory, memory, mask)
 
     def backward(self, grad_output: FloatArray) -> FloatArray:
-        # use base backward (computes grads for q/k/v); drop memory grads for now
-        grad_query = super().backward(grad_output)
-        return grad_query
+        self.grad_W_o[...] = np.einsum("bsi,bsj->ij", self.context_combined, grad_output)
+        grad_context_combined: FloatArray = np.einsum("bsi,ij->bsj", grad_output, self.W_o.T)
+
+        grad_context_heads = grad_context_combined.reshape(
+            grad_output.shape[0], grad_output.shape[1], self.num_heads, self.d_k
+        )
+        grad_context_heads = np.transpose(grad_context_heads, (0, 2, 1, 3))
+
+        grad_Q_h = np.zeros_like(self.Q_h)
+        grad_K_h = np.zeros_like(self.K_h)
+        grad_V_h = np.zeros_like(self.V_h)
+
+        for h in range(self.num_heads):
+            grad_attn_output = grad_context_heads[:, h]
+            attn = self.attn_weights[h]
+            V_h = self.V_h[:, h]
+            K_h = self.K_h[:, h]
+            Q_h = self.Q_h[:, h]
+
+            grad_V_h[:, h, :, :] = np.einsum("bqk,bqd->bkd", attn, grad_attn_output)
+            grad_context = np.einsum("bqd,bkd->bqk", grad_attn_output, V_h)
+            grad_scores = attn * (grad_context - np.sum(grad_context * attn, axis=-1, keepdims=True))
+            grad_Q_h[:, h, :, :] = np.einsum("bqk,bkd->bqd", grad_scores, K_h) / np.sqrt(self.d_k)
+            grad_K_h[:, h, :, :] = np.einsum("bqk,bqd->bkd", grad_scores, Q_h) / np.sqrt(self.d_k)
+
+        grad_Q = self._combine_heads(grad_Q_h)
+        grad_K = self._combine_heads(grad_K_h)
+        grad_V = self._combine_heads(grad_V_h)
+
+        self.grad_W_q[...] = np.einsum("bsi,bsj->ij", self.input_q, grad_Q)
+        self.grad_W_k[...] = np.einsum("bsi,bsj->ij", self.input_k, grad_K)
+        self.grad_W_v[...] = np.einsum("bsi,bsj->ij", self.input_v, grad_V)
+
+        grad_input_q = np.einsum("bsi,ij->bsj", grad_Q, self.W_q.T)
+        grad_input_k = np.einsum("bsi,ij->bsj", grad_K, self.W_k.T)
+        grad_input_v = np.einsum("bsi,ij->bsj", grad_V, self.W_v.T)
+
+        grad_memory = grad_input_k + grad_input_v
+        self.grad_memory: FloatArray = grad_memory
+
+        return grad_input_q
 
 
 class SequentialCompat:

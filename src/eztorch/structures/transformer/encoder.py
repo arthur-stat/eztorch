@@ -21,7 +21,7 @@ class TransformerEncoderLayer:
 
     def __call__(self, x: FloatArray, mask: FloatArray | None = None) -> FloatArray:
         self._input: FloatArray = x
-        attn_out: FloatArray = self.self_attn(x, mask)
+        attn_out: FloatArray = self.self_attn(x, mask=mask)
         self._attn_out: FloatArray = attn_out
         pre_norm1 = attn_out + x
         norm1_out: FloatArray = self.norm1(pre_norm1)

@@ -21,6 +21,13 @@ class SequentialModel:
         logits: FloatArray = self.forward(x)
         return np.argmax(logits, axis=1)
 
+    def probability(self, x: FloatArray) -> FloatArray:
+        logits: FloatArray = self.forward(x)
+        logits_max = np.max(logits, axis=-1, keepdims=True)
+        exps = np.exp(logits - logits_max)
+        probs: FloatArray = exps / np.sum(exps, axis=-1, keepdims=True)
+        return probs
+
     def backward(self, x: FloatArray, y: IntArray) -> None:
         batch_size: int = x.shape[0]
         logits: FloatArray = self.forward(x)

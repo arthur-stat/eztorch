@@ -6,7 +6,7 @@ Minimal, NumPy-first deep learning playground with PyTorch-inspired APIs. Includ
 
 ## Features
 - Core building blocks: `Sequential`, `Linear`, `Conv2d`, `BatchNorm1d`, `LayerNorm`, `Residual`, activations (ReLU, LeakyReLU, Tanh, Sigmoid, Softmax).
-- Training utilities: `Trainer` with SGD/Adam, CE/MSE losses, logits-first `MLP` wrapper.
+- Training utilities: `Trainer` with SGD/Adam, CE/MSE losses; build models with `Sequential`（MLP/CNN 等）。
 - Attention/Transformer: multi-head self-attention layer, encoder/decoder layers, and a `DefaultTransformer` (encoder-decoder with sinusoidal PE and generator head).
 - Tests/demos: classification/regression MLPs, toy translation demo (`test/test_nlp.py`).
 
@@ -24,14 +24,14 @@ import numpy as np
 from eztorch.layers.linear import Linear
 from eztorch.layers.sequential import Sequential
 from eztorch.functions.activations import ReLU
-from eztorch.models.mlp import MLP
+from eztorch.models.sequential_model import SequentialModel
 from eztorch.optim.adam import Adam
 from eztorch.utils.trainer import Trainer
 
 X = np.random.randn(128, 2)
 y = np.random.randint(0, 3, size=128)
-model = MLP(Sequential([Linear(2, 16), ReLU(), Linear(16, 3)]))
-trainer = Trainer(model=model.model, forward=model.forward, optimizer=Adam(lr=0.01))
+mlp = SequentialModel(Sequential([Linear(2, 16), ReLU(), Linear(16, 3)]))
+trainer = Trainer(model=mlp.model, forward=mlp.forward, optimizer=Adam(lr=0.01))
 losses = trainer.fit(X, y, batch_size=32, max_steps=200, log_every=50)
 print("final loss:", losses[-1])
 ```
@@ -50,4 +50,4 @@ This trains on a few tiny source/target pairs and prints decoded predictions, pl
 
 ## Notes
 - The framework is NumPy-based and keeps graphs inside layer implementations; it is intended for learning and experimentation, not production-scale training.
-- Cross-attention currently does not propagate gradients back to encoder memory; extend `MultiHeadCrossAttention` if you need that behavior.
+- Cross-attention now propagates gradients back to encoder memory, enabling encoder to learn from decoder signals.

@@ -6,7 +6,7 @@
 
 ## 特性
 - 基础组件：`Sequential`、`Linear`、`Conv2d`、`BatchNorm1d`、`LayerNorm`、`Residual`、常用激活（ReLU/LeakyReLU/Tanh/Sigmoid/Softmax）；
-- 训练工具：`Trainer` 配合 SGD/Adam，支持 CE/MSE，`MLP` 返回 logits（激活/损失在外部）；
+- 训练工具：`Trainer` 配合 SGD/Adam，支持 CE/MSE；使用 `Sequential` 组装模型（如 MLP/CNN 等）；
 - 注意力/Transformer：多头自注意力层、编码器/译码器层、`DefaultTransformer`（正弦位置编码 + 生成头）；
 - 示例与测试：分类/回归 MLP，NLP demo（`test/test_nlp.py`）。
 
@@ -24,14 +24,14 @@ import numpy as np
 from eztorch.layers.linear import Linear
 from eztorch.layers.sequential import Sequential
 from eztorch.functions.activations import ReLU
-from eztorch.models.mlp import MLP
+from eztorch.models.sequential_model import SequentialModel
 from eztorch.optim.adam import Adam
 from eztorch.utils.trainer import Trainer
 
 X = np.random.randn(128, 2)
 y = np.random.randint(0, 3, size=128)
-model = MLP(Sequential([Linear(2, 16), ReLU(), Linear(16, 3)]))
-trainer = Trainer(model=model.model, forward=model.forward, optimizer=Adam(lr=0.01))
+mlp = SequentialModel(Sequential([Linear(2, 16), ReLU(), Linear(16, 3)]))
+trainer = Trainer(model=mlp.model, forward=mlp.forward, optimizer=Adam(lr=0.01))
 losses = trainer.fit(X, y, batch_size=32, max_steps=200, log_every=50)
 print("final loss:", losses[-1])
 ```
@@ -50,4 +50,4 @@ python test/test_nlp.py
 
 ## 说明
 - 框架基于 NumPy，为实现简便起见计算图被嵌在层内，定位为学习/实验用途，而非生产训练。
-- 目前交叉注意力的梯度不会回传到编码器记忆；如需该特性，可在 `MultiHeadCrossAttention` 中扩展。
+- 交叉注意力已回传到编码器记忆，编码器参数可从解码器信号中学习。
