@@ -9,8 +9,8 @@ for path in (SRC_DIR,):
 
 import numpy as np
 
-from external.simple_tokenizer import SimpleTokenizer
-from external.one_hot_vectorizer import OneHotVectorizer
+from external.hf_tokenizer import HFTokenizer
+from external.sklearn_one_hot_vectorizer import SklearnOneHotVectorizer
 from eztorch.models.default_transformer import DefaultTransformer
 from eztorch.optim.sgd import SGD
 from eztorch.optim.base import zero_grads_inplace
@@ -46,8 +46,8 @@ def main():
         "yoisaki kanade",
     ]
 
-    src_tok = SimpleTokenizer()
-    tgt_tok = SimpleTokenizer()
+    src_tok = HFTokenizer()
+    tgt_tok = HFTokenizer()
     src_tok.build_vocab(train_src_texts + test_src_texts)
     tgt_tok.build_vocab(train_tgt_texts)
 
@@ -60,8 +60,8 @@ def main():
 
     src_vocab = len(src_tok.vocab)
     tgt_vocab = len(tgt_tok.vocab)
-    src_vec = OneHotVectorizer(src_vocab)
-    tgt_vec = OneHotVectorizer(tgt_vocab)
+    src_vec = SklearnOneHotVectorizer(src_vocab)
+    tgt_vec = SklearnOneHotVectorizer(tgt_vocab)
 
     src_batch = src_vec.batch(src_padded)
     tgt_in_batch = tgt_vec.batch(tgt_in_ids)
