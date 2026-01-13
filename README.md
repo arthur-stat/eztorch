@@ -11,11 +11,26 @@ Minimal, NumPy-first deep learning playground with PyTorch-inspired APIs. Includ
 - Tests/demos: classification/regression MLPs, toy translation demo (`test/test_nlp.py`).
 
 ## Installation
-Use your preferred virtual environment (e.g., `python -m venv .venv && .venv\Scripts\activate` on Windows) and install:
+Use your preferred virtual environment and install only the core by default:
 ```bash
+# pip
 pip install -e .
+# or uv
+uv pip install -e .
 ```
-If you use `uv`, you can replace with `uv pip install -e .`.
+
+Optional extras to run demos/tests without pulling heavy deps into the core:
+```bash
+# Visualization (matplotlib)
+pip install -e .[viz]
+# scikit-learn (datasets, demos)
+pip install -e .[sklearn]
+# tokenizers (modern NLP tokenization)
+pip install -e .[nlp]
+
+# everything used by examples/tests
+pip install -e .[all]
+```
 
 ## Quickstart
 ### MLP classification (logits + cross entropy)

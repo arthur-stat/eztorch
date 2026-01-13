@@ -11,11 +11,26 @@
 - 示例与测试：分类/回归 MLP，NLP demo（`test/test_nlp.py`）。
 
 ## 安装
-建议使用虚拟环境（例如 Windows 下 `python -m venv .venv && .venv\Scripts\activate`）后：
+默认仅安装核心（轻依赖，仅 `numpy`）：
 ```bash
+# pip
 pip install -e .
+# 或 uv
+uv pip install -e .
 ```
-若使用 `uv`，可替换为 `uv pip install -e .`。
+
+可选扩展（用于示例/测试，但不污染核心依赖）：
+```bash
+# 可视化（matplotlib）
+pip install -e .[viz]
+# scikit-learn（数据集/演示）
+pip install -e .[sklearn]
+# tokenizers（现代 NLP 分词）
+pip install -e .[nlp]
+
+# 示例/测试所需的全部扩展
+pip install -e .[all]
+```
 
 ## 快速上手
 ### MLP 分类（logits + 交叉熵）
