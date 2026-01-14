@@ -53,7 +53,7 @@ class MultiHeadSelfAttention:
         K_h = self._split_heads(K)
         V_h = self._split_heads(V)
 
-        # reshape mask to match heads if provided
+        # Reshape mask to match heads if provided
         attn_outputs = []
         attn_weights = []
         for h in range(self.num_heads):

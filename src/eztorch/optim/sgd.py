@@ -10,6 +10,9 @@ class SGD:
 
     def step(self, params: List[FloatArray], grads: List[FloatArray]) -> None:
         for p, g in zip(params, grads):
+            # Skip frozen (read-only) parameters
+            if hasattr(p, "flags") and getattr(p.flags, "writeable", True) is False:
+                continue
             p -= self.lr * g
 
     def zero_grad(self, grads: List[FloatArray]) -> None:

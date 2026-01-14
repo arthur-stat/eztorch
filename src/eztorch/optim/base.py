@@ -21,3 +21,27 @@ def zero_grads_inplace(grads: list[FloatArray]) -> None:
 def zeroed(grads: list[FloatArray]) -> Iterator[None]:
     zero_grads_inplace(grads)
     yield
+
+
+@contextmanager
+def frozen_params(params: list[FloatArray]) -> Iterator[None]:
+    """Temporarily freeze parameters by making them read-only.
+
+    Optimizers are expected to skip read-only arrays.
+    """
+
+    for p in params:
+        # Set writeable False
+        try:
+            p.flags.writeable = False
+        except Exception:
+            pass
+    try:
+        yield
+    finally:
+        # Restore writeable True
+        for p in params:
+            try:
+                p.flags.writeable = True
+            except Exception:
+                pass

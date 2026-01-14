@@ -8,6 +8,7 @@ class Sequential:
     
     def __init__(self, layers: list[LayerProtocol]):
         self.layers: list[LayerProtocol] = layers
+        self.training: bool = True
 
     def __call__(self, x: FloatArray) -> FloatArray:
         for layer in self.layers:
@@ -26,3 +27,15 @@ class Sequential:
 
     def grads(self) -> list[FloatArray]:
         return [g for layer in self.layers for g in getattr(layer, "grads", lambda: [])()]
+
+    def train(self) -> None:
+        self.training = True
+        for layer in self.layers:
+            if hasattr(layer, "training"):
+                setattr(layer, "training", True)
+
+    def eval(self) -> None:
+        self.training = False
+        for layer in self.layers:
+            if hasattr(layer, "training"):
+                setattr(layer, "training", False)

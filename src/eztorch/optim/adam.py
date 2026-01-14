@@ -34,6 +34,9 @@ class Adam:
         self.t += 1
 
         for i, (p, g) in enumerate(zip(params, grads)):
+            # Skip frozen (read-only) parameters
+            if hasattr(p, "flags") and getattr(p.flags, "writeable", True) is False:
+                continue
             if self.weight_decay != 0.0:
                 g = g + self.weight_decay * p
 

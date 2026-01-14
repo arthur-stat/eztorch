@@ -27,7 +27,7 @@ class Linear:
         return params
 
     def backward(self, grad_output: FloatArray) -> FloatArray:
-        # flatten leading dims
+        # Flatten leading dims
         grad_output_flat = grad_output.reshape(-1, grad_output.shape[-1])
         input_flat = self.input.reshape(-1, self.input.shape[-1])
 

@@ -2,9 +2,9 @@ import numpy as np
 
 from eztorch.functions.activations import ReLU
 from eztorch.layers.attention import MultiHeadSelfAttention
+from eztorch.layers.dropout import Dropout
 from eztorch.layers.linear import Linear
 from eztorch.layers.norm import LayerNorm
-from eztorch.layers.dropout import Dropout
 from eztorch.typing import FloatArray
 
 

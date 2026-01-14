@@ -3,9 +3,10 @@ import numpy as np
 from eztorch.layers.sequential import Sequential
 from eztorch.optim.base import Optimizer
 from eztorch.typing import FloatArray, IntArray
+from .base import BaseModel
 
 
-class SequentialModel:
+class SequentialModel(BaseModel):
     """Basic sequential model, which can be MLP, CNN etc."""
 
     def __init__(self, seq: Sequential) -> None:
@@ -45,3 +46,9 @@ class SequentialModel:
     def train_step(self, x: FloatArray, y: IntArray, optimizer: Optimizer) -> None:
         self.backward(x, y)
         optimizer.step(self.model.parameters(), self.model.grads())
+
+    def parameters(self):
+        return self.model.parameters()
+
+    def grads(self):
+        return self.model.grads()

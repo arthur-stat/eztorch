@@ -1,13 +1,14 @@
 import numpy as np
 
 from eztorch.functions.losses import CrossEntropyLoss
+from eztorch.layers.dropout import Dropout
 from eztorch.layers.embedding import Embedding
 from eztorch.layers.linear import Linear
 from eztorch.layers.norm import LayerNorm
-from eztorch.layers.dropout import Dropout
 from eztorch.structures.transformer.decoder import TransformerDecoderLayer
 from eztorch.structures.transformer.encoder import TransformerEncoderLayer
 from eztorch.typing import FloatArray, IntArray
+from .base import BaseModel
 
 
 class PositionalEncoding:
@@ -25,7 +26,7 @@ class PositionalEncoding:
         return x + self.pe[:seq_len]
 
 
-class DefaultTransformer:
+class DefaultTransformer(BaseModel):
     """A minimal encoder-decoder Transformer returning logits."""
 
     def __init__(
@@ -129,12 +130,12 @@ class DefaultTransformer:
                 grad_memory_total += grad_mem
         grad_dec_in = self.dropout_tgt.backward(grad_dec_out)
         _ = self.tgt_embed.backward(grad_dec_in)
-        # positional encoding is additive; gradient flows through unchanged
+        # positional encoding?
 
         grad_enc = grad_memory_total
         for layer in reversed(self.encoder_layers):
             grad_enc = layer.backward(grad_enc)
         grad_enc_in = self.dropout_src.backward(grad_enc)
         _ = self.src_embed.backward(grad_enc_in)
-        # positional encoding additive; gradient passes through
+        # positional encoding?
         return
