@@ -62,7 +62,3 @@ python test/test_nlp.py
 - `test/test_mlp_classification.py`：moons 数据集分类，含归一化 + ReLU。
 - `test/test_mlp_regression.py`：合成回归 + MSE。
 - `test/test_nlp.py`：默认 Transformer + 外部分词/向量化的翻译 Demo。
-
-## 说明
-- 框架基于 NumPy，为实现简便起见计算图被嵌在层内，定位为学习/实验用途，而非生产训练。
-- 交叉注意力已回传到编码器记忆，编码器参数可从解码器信号中学习。

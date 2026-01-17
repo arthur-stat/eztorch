@@ -329,24 +329,44 @@ name = "eztorch"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
-    { name = "matplotlib", version = "3.9.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
-    { name = "matplotlib", version = "3.10.8", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
     { name = "numpy", version = "2.0.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.10.*'" },
     { name = "numpy", version = "2.4.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+]
+
+[package.optional-dependencies]
+all = [
+    { name = "matplotlib", version = "3.9.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
+    { name = "matplotlib", version = "3.10.8", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
     { name = "scikit-learn", version = "1.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "scikit-learn", version = "1.7.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.10.*'" },
     { name = "scikit-learn", version = "1.8.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "tokenizers" },
 ]
+nlp = [
+    { name = "tokenizers" },
+]
+sklearn = [
+    { name = "scikit-learn", version = "1.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
+    { name = "scikit-learn", version = "1.7.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.10.*'" },
+    { name = "scikit-learn", version = "1.8.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+]
+viz = [
+    { name = "matplotlib", version = "3.9.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
+    { name = "matplotlib", version = "3.10.8", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
+]
 
 [package.metadata]
 requires-dist = [
-    { name = "matplotlib", specifier = ">=3.9.4" },
+    { name = "matplotlib", marker = "extra == 'all'", specifier = ">=3.9.4" },
+    { name = "matplotlib", marker = "extra == 'viz'", specifier = ">=3.9.4" },
     { name = "numpy", specifier = ">=2.0" },
-    { name = "scikit-learn", specifier = ">=1.6.1" },
-    { name = "tokenizers", specifier = ">=0.22.2" },
+    { name = "scikit-learn", marker = "extra == 'all'", specifier = ">=1.6.1" },
+    { name = "scikit-learn", marker = "extra == 'sklearn'", specifier = ">=1.6.1" },
+    { name = "tokenizers", marker = "extra == 'all'", specifier = ">=0.22.2" },
+    { name = "tokenizers", marker = "extra == 'nlp'", specifier = ">=0.22.2" },
 ]
+provides-extras = ["viz", "sklearn", "nlp", "all"]
 
 [[package]]
 name = "filelock"

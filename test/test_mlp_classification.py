@@ -28,12 +28,12 @@ def main():
 
     X, y = make_moons(n_samples=1000, noise=0.1)
     batch_size = 50
-    max_steps = 20
-    log_every = 4
+    max_steps = 50
+    log_every = 5
     learning_rate = 0.05
 
     mlp = SequentialModel(Sequential([
-        Linear(2, 16), BatchNorm1d(16), Softmax(), Dropout(p=0.01),
+        Linear(2, 16), BatchNorm1d(16), Softmax(), Dropout(p=0.005),
         Linear(16, 8), LayerNorm(8), ReLU(),
         Linear(8, 4), Tanh(),
         Linear(4, 2)

@@ -30,6 +30,12 @@ class Dropout:
         keep_prob = 1.0 - self.p
         return (grad_output * self._mask) / keep_prob
 
+    def train(self) -> None:
+        self.training = True
+
+    def eval(self) -> None:
+        self.training = False
+
     def parameters(self) -> list[FloatArray]:
         return []
 

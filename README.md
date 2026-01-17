@@ -52,7 +52,7 @@ print("final loss:", losses[-1])
 ```
 
 ### Transformer translation demo (see `test/test_nlp.py`)
-Uses the simple whitespace tokenizer/one-hot vectorizer from `src/external/` and the built-in `DefaultTransformer`:
+Uses the simple whitespace tokenizer from `src/external/` and the built-in `DefaultTransformer`:
 ```bash
 python test/test_nlp.py
 ```
@@ -62,7 +62,3 @@ This trains on a few tiny source/target pairs and prints decoded predictions, pl
 - `test/test_mlp_classification.py` – moons dataset classification with norms + ReLU.
 - `test/test_mlp_regression.py` – synthetic regression with MSE.
 - `test/test_nlp.py` – tiny translation toy using the default Transformer and external tokenizer/vectorizer.
-
-## Notes
-- The framework is NumPy-based and keeps graphs inside layer implementations; it is intended for learning and experimentation, not production-scale training.
-- Cross-attention now propagates gradients back to encoder memory, enabling encoder to learn from decoder signals.

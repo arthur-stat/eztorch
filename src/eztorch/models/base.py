@@ -23,6 +23,45 @@ class BaseModel:
     def grads(self) -> List[FloatArray]:  # pragma: no cover - to be overridden
         raise NotImplementedError
 
+    def train(self) -> None:
+        self.training = True
+        self._set_training_mode(True)
+
+    def eval(self) -> None:
+        self.training = False
+        self._set_training_mode(False)
+
+    def _set_training_mode(self, mode: bool) -> None:
+        visited: set[int] = set()
+
+        def walk(obj: object) -> None:
+            obj_id = id(obj)
+            if obj_id in visited:
+                return
+            visited.add(obj_id)
+
+            if hasattr(obj, "training"):
+                try:
+                    setattr(obj, "training", mode)
+                except Exception:
+                    pass
+
+            if isinstance(obj, dict):
+                for value in obj.values():
+                    walk(value)
+                return
+
+            if isinstance(obj, (list, tuple, set)):
+                for value in obj:
+                    walk(value)
+                return
+
+            if hasattr(obj, "__dict__"):
+                for value in obj.__dict__.values():
+                    walk(value)
+
+        walk(self)
+
     def state_dict(self) -> Dict[str, FloatArray]:
         params = self.parameters()
         state: Dict[str, FloatArray] = {}
